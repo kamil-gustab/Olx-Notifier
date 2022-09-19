@@ -1,4 +1,4 @@
-# Olx Notifier
+# :bell: Olx Notifier
 Follow ads for your chosen category on OLX.pl
 ## :book: Description
 It is the python app - Web Scrapper for checking and saving list of active ads in chosen category.
