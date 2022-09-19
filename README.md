@@ -4,44 +4,35 @@ Follow ads for your chosen category on OLX.pl
 It is the python app - Web Scrapper for checking and saving list of active ads in chosen category.
 ## 🚀 Usage
 Make sure you have installed:
-* [requests](https://pypi.org/project/requests)
+* [alive_progress](https://pypi.org/project/alive_progress)
 * [BeautifulSoup4](https://pypi.org/project/beautifulsoup4)
-* [pandas](https://pypi.org/project/pandas)
-* [openpyxl](https://pypi.org/project/openpyxl/)
+* [certifi](https://pypi.org/project/certifi)
 * [lxml](https://pypi.org/project/lxml/)
+* [telegram_send](https://pypi.org/project/telegram_send/)
 
-Before run you need to complete 2 files you can find in: `/config`
 
-`1. options.txt`
+Before run you need to complete passes file:
+
+`passes.txt`
 
 Data examples:
 
 1. Recipient Email
 2. Sender Email address
-3. Sender Email password
+3. Sender Email app-password
 
 ![options.txt example screen](https://i.imgur.com/YR5KSeG.png)
 
 ---
-`2. tracked_products.csv`
-
-You can add your products, with target price below which you will receive email notifications.
-
-Data examples:
-
-Product link, Our target price
-
-![tracked_products.csv example screen](https://i.imgur.com/Vdin40U.png)
-
----
-After filling those files just run the following command at the root of your project:
+After filling file just run the following command at the root of your project:
 ```
 python scrapper.py
 ```
-Or schedule it to run every X minutes on your machine.
-
-Script does provide logs, along with filling `searching_history.xlsx` file with data from each run.
-When finds
+Or schedule it to run every X minutes on your machine using e.g. crontab like:
+```
+| every 10min   | your path to scrapper catalog | path to your python
+*/10 * * * * cd /home/{your-user}/Olx-Notifier; /usr/bin/python3 main.py
+```
 
 ## Author
 
