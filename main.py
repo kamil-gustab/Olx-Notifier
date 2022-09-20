@@ -1,5 +1,6 @@
 import certifi                          # Certificate issue fix: https://stackoverflow.com/questions/52805115/certificate-verify-failed-unable-to-get-local-issuer-certificate
 import email_notificator                # File import
+import os
 import re                               # Regex; extract substrings
 import ssl                              # Certificate issue fix: https://stackoverflow.com/questions/52805115/certificate-verify-failed-unable-to-get-local-issuer-certificate
 import telegram_send                    # Telegram message sending library
@@ -86,8 +87,16 @@ def write_to_file(data):
 
 
 def check_data(data):
-    with open('previous_results.txt', 'r') as file:
-        file_content = file.read()
+    global first_run
+    try:
+        with open('previous_results.txt', 'r') as file:
+            file_content = file.read()
+    except FileNotFoundError:
+        print("First run, creating file...")
+        cwd = os.getcwd()
+        os.system(f"touch {cwd}/previous_results.txt")
+        first_run = True
+        file_content = ""
 
     found_ads = []
     for item in data:
@@ -95,21 +104,21 @@ def check_data(data):
             found_ads.append(item)
 
     print(f"Found {len(found_ads)} new ad(s) - compared to the previous search:\n")
-    print(*found_ads, sep="\n")
     return found_ads
 
 
 def notify_mail(data):
-    print("Sending notification through Mail!")
+    print("Sending notification(s) through Mail!")
     email_notificator.send_mail(data)
 
 
 def notify_telegram(data):
-    print("Sending notification through Telegram!")
+    print("Sending notification(s) through Telegram!")
     telegram_send.send(messages=data)
 
 
 if __name__ == "__main__":
+    first_run = False
     # ========== URL to scrape ==========
     page_url = 'https://www.olx.pl/nieruchomosci/stancje-pokoje/krakow/?search%5Border%5D=created_at:desc&search%5Bfilter_float_price:from%5D=600&search%5Bfilter_float_price:to%5D=900'
     # ===================================
@@ -117,5 +126,10 @@ if __name__ == "__main__":
     ads_list = get_list_of_ads(page_url)
     new_ads = check_data(ads_list)
     if new_ads:
-        notify_telegram(new_ads)
         write_to_file(new_ads)
+        if first_run:
+            print("It's first run, not sending any notifications.")
+        else:
+            print(*new_ads, sep="\n")
+            notify_telegram(new_ads)
+            # notify_mail(new_ads)
