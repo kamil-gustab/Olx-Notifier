@@ -38,4 +38,4 @@ Or schedule it to run every X minutes on your machine using e.g. crontab like:
 
 👤 **Kamil Gustab**
 
-- Github: [@gustab.kamil](https://github.com/gustab.kamil)
+- Github: [@gustab.kamil](https://github.com/kamil-gustab)
