@@ -16,7 +16,7 @@ You can choose between two options of notifying
 - By telegram message (preferred option)
 - By e-mail
 ---
-###a) Notifying by telegram message
+### a) Notifying by telegram message
 To do so you first need to configure your `telegram_send` package.
 
 To do so:
@@ -26,7 +26,7 @@ To do so:
 4) Voi'la - you can simply use your bot!
 
 ---
-###b) Notifying by mail
+### b) Notifying by mail
 
 For best experience you should use gmail along with per-app-password for your script.
 More about App Password for gmail - [here](https://support.google.com/accounts/answer/185833)
