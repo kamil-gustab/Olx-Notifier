@@ -1,8 +1,10 @@
+import argparse                         # Parse arguments
 import certifi                          # Certificate issue fix: https://stackoverflow.com/questions/52805115/certificate-verify-failed-unable-to-get-local-issuer-certificate
 import email_notificator                # File import
 import os
 import re                               # Regex; extract substrings
 import ssl                              # Certificate issue fix: https://stackoverflow.com/questions/52805115/certificate-verify-failed-unable-to-get-local-issuer-certificate
+import sys
 import telegram_send                    # Telegram message sending library
 import time                             # Delay execution; calculate script's run time
 from alive_progress import alive_bar    # Progress bar
@@ -31,8 +33,8 @@ def scrap_page(url):
     with alive_bar(bar="classic2", spinner="classic") as bar:  # progress bar
         for link in soup.find_all("a", {"class": "thumb"}):
             temp_list_of_items.append(link.get('href'))
-            counter += 1    # counter ++
-            bar()           # progress bar ++
+            counter += 1  # counter ++
+            bar()  # progress bar ++
     print(f"Found {counter} items on page.")
     return temp_list_of_items
 
@@ -117,12 +119,26 @@ def notify_telegram(data):
     telegram_send.send(messages=data)
 
 
-if __name__ == "__main__":
-    first_run = False
-    # ========== URL to scrape ==========
-    page_url = 'https://www.olx.pl/nieruchomosci/stancje-pokoje/krakow/?search%5Border%5D=created_at:desc&search%5Bfilter_float_price:from%5D=600&search%5Bfilter_float_price:to%5D=900'
-    # ===================================
+def format_url(url):
+    return url.replace("olx.pl/d/", "olx.pl/")
 
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--url', type=str, required=False)
+    parser.add_argument('--notify', type=str, required=True, choices = ['mail', 'no-notify', 'telegram'])
+    args = parser.parse_args()
+    first_run = False
+
+    if args.url:
+        given_url = args.url
+    else:
+        print("You didn't provide url as parameter, taking default from file code...")
+        # ========== URL to scrape if nothing given in parameter ==========
+        given_url = 'https://www.olx.pl/nieruchomosci/stancje-pokoje/krakow/?search%5Border%5D=created_at:desc&search%5Bfilter_float_price:from%5D=600&search%5Bfilter_float_price:to%5D=900'
+        # =================================================================
+
+    page_url = format_url(given_url)
     ads_list = get_list_of_ads(page_url)
     new_ads = check_data(ads_list)
     if new_ads:
@@ -131,5 +147,9 @@ if __name__ == "__main__":
             print("It's first run, not sending any notifications.")
         else:
             print(*new_ads, sep="\n")
-            notify_telegram(new_ads)
-            # notify_mail(new_ads)
+            if args.notify == "telegram":
+                notify_telegram(new_ads)
+            elif args.notify == "mail":
+                notify_mail(new_ads)
+            else:
+                print("You've chosen --notify no-notify - not sending any notify.")
