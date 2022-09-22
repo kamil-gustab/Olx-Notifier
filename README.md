@@ -1,7 +1,7 @@
 # :bell: Olx Notifier
 Follow ads for your chosen category on OLX.pl
 ## :book: Description
-It is the python app - Web Scrapper for checking and saving list of active ads in chosen category.
+It is the python app - Web Scraper for checking and saving list of active ads in chosen category.
 ## 🚀 Usage
 Make sure you have installed:
 * [alive_progress](https://pypi.org/project/alive_progress)
@@ -44,14 +44,18 @@ Data examples:
 ![options.txt example screen](https://i.imgur.com/YR5KSeG.png)
 
 ---
-After filling file just run the following command at the root of your project:
+### Run
+
+To start - just run the following command at the root of your project like e.g.:
 ```
-python3 main.py
+python3 main.py --url <your-url> --notify telegram
+python3 main.py --url <your-url> --notify mail
+python3 main.py --notify no-notify
 ```
-Or schedule it to run every X minutes on your machine using e.g. crontab like:
+Or schedule it to run every X minutes on your machine, by using e.g. crontab like:
 ```
-| every 10min   | your path to scrapper catalog | path to your python
-*/10 * * * * cd /home/{your-user}/Olx-Notifier; /usr/bin/python3 main.py
+| every 10min   | your path to scrapper catalog | path to your python    | parameters
+*/10 * * * * cd /home/{your-user}/Olx-Notifier; /usr/bin/python3 main.py --notify telegram
 ```
 
 ## Author
