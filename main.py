@@ -4,9 +4,8 @@ import email_notificator                # File import
 import os
 import re                               # Regex; extract substrings
 import ssl                              # Certificate issue fix: https://stackoverflow.com/questions/52805115/certificate-verify-failed-unable-to-get-local-issuer-certificate
-import sys
 import telegram_send                    # Telegram message sending library
-import time                             # Delay execution; calculate script's run time
+import time                             # Delay execution
 from alive_progress import alive_bar    # Progress bar
 from bs4 import BeautifulSoup           # BeautifulSoup; parsing HTML
 from urllib.request import urlopen      # Open URLs
@@ -25,9 +24,11 @@ def scrap_page(url):
             bar()
 
     print("Opening page...")
-    page = request.urlopen(url, context=ssl.create_default_context(cafile=certifi.where()))
+    page = request.urlopen(url,
+                           context=ssl.create_default_context(cafile=certifi.where()))
     print("Scraping page...")
-    soup = BeautifulSoup(page, features="lxml")  # get URL into BS # *NOTE: v: olx
+    soup = BeautifulSoup(page,
+                         features="lxml")
 
     counter = 0  # counter to get # of URLs/items
     with alive_bar(bar="classic2", spinner="classic") as bar:  # progress bar
@@ -105,7 +106,8 @@ def check_data(data):
         if item not in file_content:
             found_ads.append(item)
 
-    print(f"Found {len(found_ads)} new ad(s) - compared to the previous search:\n")
+    print(f"Found {len(found_ads)} new ad(s)"
+          f" - compared to the previous search:\n")
     return found_ads
 
 
@@ -126,7 +128,8 @@ def format_url(url):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--url', type=str, required=False)
-    parser.add_argument('--notify', type=str, required=True, choices = ['mail', 'no-notify', 'telegram'])
+    parser.add_argument('--notify', type=str, required=True,
+                        choices=['mail', 'no-notify', 'telegram'])
     args = parser.parse_args()
     first_run = False
 
