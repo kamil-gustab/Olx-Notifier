@@ -20,7 +20,7 @@ def send_mail(data):
     msg.set_content(f'''
     We found new ad(s) from olx:\n
     Link(s): {data}
-    
+
     Message sent automatically by Olx Notifier.
     Visit project at: https://github.com/kamil-gustab/Olx-Notifier
     ''')
