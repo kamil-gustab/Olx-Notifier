@@ -122,6 +122,8 @@ def notify_telegram(data):
 
 
 def format_url(url):
+    if url[-1] == "/":
+        url = url[:-1]
     return url.replace("olx.pl/d/", "olx.pl/")
 
 
