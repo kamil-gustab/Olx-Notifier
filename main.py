@@ -17,7 +17,7 @@ def scrap_page(url):
 
     # Adding delay to not block itself
     pause_duration = 3  # seconds to wait
-    print("Waiting for", pause_duration, "seconds before opening URL...")
+    print(f"Waiting for {pause_duration} seconds before opening URL...")
     with alive_bar(pause_duration, bar="circles", spinner="dots_waves") as bar:
         for second in range(0, pause_duration):
             time.sleep(1)
@@ -27,13 +27,18 @@ def scrap_page(url):
     page = request.urlopen(url,
                            context=ssl.create_default_context(cafile=certifi.where()))
     print("Scraping page...")
-    soup = BeautifulSoup(page,
-                         features="lxml")
+    soup = BeautifulSoup(page, features="lxml")
+
+    # When looking for work - links are in different classes
+    if "olx.pl/praca" not in url:
+        target_class = "thumb"
+    else:
+        target_class = "marginright5"
 
     counter = 0  # counter to get # of URLs/items
     with alive_bar(bar="classic2", spinner="classic") as bar:  # progress bar
-        for link in soup.find_all("a", {"class": "thumb"}):
-            temp_list_of_items.append(link.get('href'))
+        for link in soup.find_all("a", {"class": target_class}):
+            temp_list_of_items.append(link.get("href"))
             counter += 1  # counter ++
             bar()  # progress bar ++
     print(f"Found {counter} items on page.")
@@ -43,7 +48,7 @@ def scrap_page(url):
 def get_number_of_pages(url_):
     # *NOTE: number of search results pages
     page = urlopen(url_, context=ssl.create_default_context(cafile=certifi.where()))  # fix certificate issue
-    soup = BeautifulSoup(page, 'html.parser')  # parse the page
+    soup = BeautifulSoup(page, "html.parser")  # parse the page
     html_content = soup.body.find('a', attrs={'data-cy': 'page-link-last'})
     num_of_pages = re.search('<span>(.*?)</span>', str(html_content))
     try:  # if there is only 1 page
@@ -65,7 +70,12 @@ def remove_dups(list_):
 def get_list_of_ads(url):
     number_of_pages_to_scrap = get_number_of_pages(url)
 
-    page_prefix = '&page='
+    # When looking for work - links for pages work differently
+    if "olx.pl/praca" not in url:
+        page_prefix = "&page="
+    else:
+        page_prefix = "?page="
+
     page_number = 1
     list_of_items = []
 
@@ -81,7 +91,7 @@ def get_list_of_ads(url):
 
 
 def write_to_file(data):
-    with open('previous_results.txt', 'a') as file:
+    with open("previous_results.txt", "a") as file:
         if len(data) == 1:
             new_data = f"\n{str(data)[2:-2]}"
         else:
@@ -92,7 +102,7 @@ def write_to_file(data):
 def check_data(data):
     global first_run
     try:
-        with open('previous_results.txt', 'r') as file:
+        with open("previous_results.txt", "r") as file:
             file_content = file.read()
     except FileNotFoundError:
         print("First run, creating file...")
