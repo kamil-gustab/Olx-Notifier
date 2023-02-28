@@ -29,16 +29,17 @@ def scrap_page(url):
     print("Scraping page...")
     soup = BeautifulSoup(page, features="lxml")
 
-    # When looking for work - links are in different classes
-    if "olx.pl/praca" not in url:
-        target_class = "thumb"
-    else:
-        target_class = "marginright5"
+    target_class = "css-rc5s2u"
 
     counter = 0  # counter to get # of URLs/items
     with alive_bar(bar="classic2", spinner="classic") as bar:  # progress bar
         for link in soup.find_all("a", {"class": target_class}):
-            temp_list_of_items.append(link.get("href"))
+            half_link = link.get("href")
+            if "https://" not in half_link:
+                full_link = f"https://www.olx.pl{half_link}"
+            else:
+                full_link = half_link
+            temp_list_of_items.append(full_link)
             counter += 1  # counter ++
             bar()  # progress bar ++
     print(f"Found {counter} items on page.")
@@ -49,13 +50,8 @@ def get_number_of_pages(url_):
     # *NOTE: number of search results pages
     page = urlopen(url_, context=ssl.create_default_context(cafile=certifi.where()))  # fix certificate issue
     soup = BeautifulSoup(page, "html.parser")  # parse the page
-    html_content = soup.body.find('a', attrs={'data-cy': 'page-link-last'})
-    num_of_pages = re.search('<span>(.*?)</span>', str(html_content))
-    try:  # if there is only 1 page
-        num_of_pages = int(num_of_pages.group(1))
-    except AttributeError:
-        num_of_pages = 1
-    print(f'Found {num_of_pages} pages to scrap.')
+    target_class = "css-1mi714g"
+    num_of_pages = len(soup.find_all("a", {"class": target_class}))
     return num_of_pages
 
 
@@ -70,18 +66,15 @@ def remove_dups(list_):
 def get_list_of_ads(url):
     number_of_pages_to_scrap = get_number_of_pages(url)
 
-    # When looking for work - links for pages work differently
-    if "olx.pl/praca" not in url:
-        page_prefix = "&page="
-    else:
-        page_prefix = "?page="
+    page_prefix = "page="
 
     page_number = 1
     list_of_items = []
 
     while page_number <= number_of_pages_to_scrap:
         print(f"Page number: {page_number}/{number_of_pages_to_scrap}")
-        full_page_url = f"{url}{page_prefix}{page_number}"
+        page_position = url.find("?search%")+1
+        full_page_url = f"{url[:page_position]}{page_prefix}{page_number}&{url[page_position:]}"
         list_of_items.extend(scrap_page(full_page_url))
         page_number += 1  # Go to the next page
 
@@ -150,7 +143,7 @@ if __name__ == "__main__":
     else:
         print("You didn't provide url as parameter, taking default from file code...")
         # ========== URL to scrape if nothing given in parameter ==========
-        given_url = 'https://www.olx.pl/nieruchomosci/stancje-pokoje/krakow/?search%5Border%5D=created_at:desc&search%5Bfilter_float_price:from%5D=600&search%5Bfilter_float_price:to%5D=900'
+        given_url = 'https://www.olx.pl/nieruchomosci/stancje-pokoje/krakow/?search%5Bfilter_float_price%3Afrom%5D=600&search%5Bfilter_float_price%3Ato%5D=900&search%5Border%5D=created_at%3Adesc'
         # =================================================================
 
     page_url = format_url(given_url)
