@@ -51,8 +51,13 @@ def get_number_of_pages(url_):
     page = urlopen(url_, context=ssl.create_default_context(cafile=certifi.where()))  # fix certificate issue
     soup = BeautifulSoup(page, "html.parser")  # parse the page
     target_class = "css-1mi714g"
-    num_of_pages = len(soup.find_all("a", {"class": target_class}))
-    return num_of_pages
+    pages = soup.find_all("a", {"class": target_class})
+    num_of_pages = str(re.findall(">..<", str(pages))[-1])[1:-1]
+    if not num_of_pages.isdigit():
+        num_of_pages = str(re.findall(">.<", str(pages))[-1])[1:-1]
+    # num_of_pages = len(soup.find_all("a", {"class": target_class}))
+    # print(soup.find_all("a", {"class": target_class}))
+    return int(num_of_pages)
 
 
 def remove_dups(list_):
@@ -119,10 +124,12 @@ def notify_mail(data):
     email_notificator.send_mail(data)
 
 
-def notify_telegram(data):
+def notify_telegram(data, config_path=None):
     print("Sending notification(s) through Telegram!")
-    telegram_send.send(messages=data)
-
+    if not config_path:
+        telegram_send.send(messages=data, conf=config_path)
+    else:
+        telegram_send.send(messages=data)
 
 def format_url(url):
     if url[-1] == "/":
@@ -133,6 +140,7 @@ def format_url(url):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--url', type=str, required=False)
+    parser.add_argument('--config', type=str, required=False)
     parser.add_argument('--notify', type=str, required=True,
                         choices=['mail', 'no-notify', 'telegram'])
     args = parser.parse_args()
@@ -143,7 +151,7 @@ if __name__ == "__main__":
     else:
         print("You didn't provide url as parameter, taking default from file code...")
         # ========== URL to scrape if nothing given in parameter ==========
-        given_url = 'https://www.olx.pl/nieruchomosci/stancje-pokoje/krakow/?search%5Bfilter_float_price%3Afrom%5D=600&search%5Bfilter_float_price%3Ato%5D=900&search%5Border%5D=created_at%3Adesc'
+        given_url = 'https://www.olx.pl/nieruchomosci/mieszkania/wynajem/krakow/?search%5Border%5D=created_at:desc&search%5Bfilter_float_price:from%5D=1700&search%5Bfilter_float_price:to%5D=2500&search%5Bfilter_float_m:from%5D=40'
         # =================================================================
 
     page_url = format_url(given_url)
@@ -156,7 +164,10 @@ if __name__ == "__main__":
         else:
             print(*new_ads, sep="\n")
             if args.notify == "telegram":
-                notify_telegram(new_ads)
+                if args.config:
+                    notify_telegram(new_ads, args.config)
+                else:
+                    notify_telegram(new_ads)
             elif args.notify == "mail":
                 notify_mail(new_ads)
             else:
