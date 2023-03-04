@@ -126,7 +126,7 @@ def notify_mail(data):
 
 def notify_telegram(data, config_path=None):
     print("Sending notification(s) through Telegram!")
-    if not config_path:
+    if config_path:
         telegram_send.send(messages=data, conf=config_path)
     else:
         telegram_send.send(messages=data)
