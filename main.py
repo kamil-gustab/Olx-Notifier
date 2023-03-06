@@ -1,15 +1,15 @@
-import argparse                         # Parse arguments
-import certifi                          # Certificate issue fix: https://stackoverflow.com/questions/52805115/certificate-verify-failed-unable-to-get-local-issuer-certificate
-import email_notificator                # File import
+import argparse  # Parse arguments
+import certifi  # Certificate issue fix*
+import email_notificator  # File import
 import logging
 import os
-import re                               # Regex; extract substrings
-import ssl                              # Certificate issue fix: https://stackoverflow.com/questions/52805115/certificate-verify-failed-unable-to-get-local-issuer-certificate
-import telegram_send                    # Telegram message sending library
-import time                             # Delay execution
-from bs4 import BeautifulSoup           # BeautifulSoup; parsing HTML
-from urllib.request import urlopen      # Open URLs
-from urllib import request              # Get OLX page source
+import re  # Regex; extract substrings
+import ssl  # Certificate issue fix*
+import telegram_send  # Telegram message sending library
+import time  # Delay execution
+from bs4 import BeautifulSoup  # BeautifulSoup; parsing HTML
+from urllib.request import urlopen  # Open URLs
+from urllib import request  # Get OLX page source
 
 
 def scrap_page(url):
@@ -17,11 +17,12 @@ def scrap_page(url):
 
     # Adding delay to not block itself
     pause_duration = 3  # seconds to wait
-    logging.debug(f"Waiting for {pause_duration} seconds before opening URL...")
+    logging.debug(f"Waiting for {pause_duration}s before opening URL...")
     time.sleep(pause_duration)
     logging.debug("Opening page...")
-    page = request.urlopen(url,
-                           context=ssl.create_default_context(cafile=certifi.where()))
+    page = request.urlopen(
+        url, context=ssl.create_default_context(cafile=certifi.where())
+    )
     logging.debug("Scraping page...")
     soup = BeautifulSoup(page, features="lxml")
 
@@ -42,7 +43,9 @@ def scrap_page(url):
 
 def get_number_of_pages(url_):
     # *NOTE: number of search results pages
-    page = urlopen(url_, context=ssl.create_default_context(cafile=certifi.where()))  # fix certificate issue
+    page = urlopen(
+        url_, context=ssl.create_default_context(cafile=certifi.where())
+    )
     soup = BeautifulSoup(page, "html.parser")  # parse the page
     target_class = "css-1mi714g"
     pages = soup.find_all("a", {"class": target_class})
@@ -72,9 +75,10 @@ def get_list_of_ads(url):
 
     while page_number <= number_of_pages_to_scrap:
         logging.info(f"Page number: {page_number}/{number_of_pages_to_scrap}")
-        page_position = url.find("?search%")+1
-        full_page_url = f"{url[:page_position]}{page_prefix}{page_number}&{url[page_position:]}"
-        list_of_items.extend(scrap_page(full_page_url))
+        p_pos = url.find("?search%") + 1
+        full_url = f"{url[:p_pos]}{page_prefix}{page_number}&{url[p_pos:]}"
+        print(full_url)
+        list_of_items.extend(scrap_page(full_url))
         page_number += 1  # Go to the next page
 
     final_set = remove_dups(list_of_items)
@@ -108,8 +112,9 @@ def check_data(data):
         if item not in file_content:
             found_ads.append(item)
 
-    logging.info(f"Found {len(found_ads)} new ad(s)"
-          f" - compared to the previous search:\n")
+    logging.info(
+        f"Found {len(found_ads)} new ad(s) compared to the previous search:\n"
+    )
     return found_ads
 
 
@@ -125,6 +130,7 @@ def notify_telegram(data, config_path=None):
     else:
         telegram_send.send(messages=data)
 
+
 def format_url(url):
     if url[-1] == "/":
         url = url[:-1]
@@ -134,19 +140,29 @@ def format_url(url):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        '--debug',
-        help="Set debug for a run.",
-        action='store_true')
-    parser.add_argument('--url',
-        help="Provide url to check ads from.",
-        type=str, required=False)
-    parser.add_argument('--config',
+        "-c", "--config",
         help="Provide absolute path to the custom telegram_send config file.",
-        type=str, required=False)
-    parser.add_argument('--notify',
+        type=str,
+        required=False
+    )
+    parser.add_argument(
+        "-d", "--debug",
+        help="Set debug for a run.",
+        action="store_true"
+    )
+    parser.add_argument(
+        "-n", "--notify",
         help="Choose way of notifying about new ads.",
-        type=str, required=True,
-        choices=['mail', 'no-notify', 'telegram'])
+        type=str,
+        required=True,
+        choices=["mail", "no-notify", "telegram"]
+    )
+    parser.add_argument(
+        "-u", "--url",
+        help="Provide url to check ads from.",
+        type=str,
+        required=False
+    )
     args = parser.parse_args()
     log_lvl = logging.INFO
     if args.debug:
@@ -155,17 +171,26 @@ if __name__ == "__main__":
 
     logging.basicConfig(
         level=log_lvl,
-        filename='logs.log',
+        filename="logs.log",
         format="%(levelname)s : %(asctime)s : %(message)s"
     )
 
+    # ========== URL to scrape if nothing given in parameter ==========
+    given_url = ""
+    # =================================================================
+
     if args.url:
         given_url = args.url
+        logging.debug("Using URL from parameter...")
     else:
-        logging.info("You didn't provide url as parameter, taking default from file code...")
-        # ========== URL to scrape if nothing given in parameter ==========
-        given_url = 'https://www.olx.pl/nieruchomosci/mieszkania/wynajem/krakow/?search%5Border%5D=created_at:desc&search%5Bfilter_float_price:from%5D=1700&search%5Bfilter_float_price:to%5D=2500&search%5Bfilter_float_m:from%5D=40'
-        # =================================================================
+        logging.debug("You didn't provide url, taking url from code file...")
+        if not given_url:
+            logging.error(
+                "Didn't find URL in code nor in paramter, provide URL!"
+            )
+            raise SystemExit(
+                "Didn't find URL in code nor in paramter, provide URL!"
+            )
 
     page_url = format_url(given_url)
     ads_list = get_list_of_ads(page_url)
@@ -175,7 +200,8 @@ if __name__ == "__main__":
         if first_run:
             logging.info("It's first run, not sending any notifications.")
         else:
-            logging.info(*new_ads, sep="\n")
+            for ad in new_ads:
+                logging.info(ad)
             if args.notify == "telegram":
                 if args.config:
                     notify_telegram(new_ads, args.config)
@@ -184,4 +210,6 @@ if __name__ == "__main__":
             elif args.notify == "mail":
                 notify_mail(new_ads)
             else:
-                logging.info("You've chosen --notify no-notify - not sending any notify.")
+                logging.info(
+                    "You've chosen --notify no-notify -not sending any notify."
+                )
