@@ -12,6 +12,11 @@ from urllib.request import urlopen  # Open URLs
 from urllib import request  # Get OLX page source
 
 
+def filter_extended(url_list):
+    new_list = [url for url in url_list if "extended_search_extended" not in url]
+    return new_list
+
+
 def scrap_page(url):
     temp_list_of_items = []
 
@@ -112,10 +117,12 @@ def check_data(data):
         if item not in file_content:
             found_ads.append(item)
 
+    filtered_ads = filter_extended(found_ads)
+
     logging.info(
-        f"Found {len(found_ads)} new ad(s) compared to the previous search:\n"
+        f"Found {len(filtered_ads)} new ad(s) compared to the previous search:\n"
     )
-    return found_ads
+    return filtered_ads
 
 
 def notify_mail(data):
