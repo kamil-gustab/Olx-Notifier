@@ -33,7 +33,6 @@ def scrap_page(url):
 
     target_class = "css-rc5s2u"
 
-    counter = 0
     for link in soup.find_all("a", {"class": target_class}):
         half_link = link.get("href")
         if "https://" not in half_link:
@@ -41,8 +40,7 @@ def scrap_page(url):
         else:
             full_link = half_link
         temp_list_of_items.append(full_link)
-        counter += 1
-    logging.info(f"Found {counter} items on page.")
+    logging.info(f"Found {len(temp_list_of_items)} items on page.")
     return temp_list_of_items
 
 
