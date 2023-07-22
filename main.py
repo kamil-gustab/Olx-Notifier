@@ -52,12 +52,16 @@ def get_number_of_pages(url_):
     soup = BeautifulSoup(page, "html.parser")  # parse the page
     target_class = "css-1mi714g"
     pages = soup.find_all("a", {"class": target_class})
-    num_of_pages = str(re.findall(">..<", str(pages))[-1])[1:-1]
-    if not num_of_pages.isdigit():
-        num_of_pages = str(re.findall(">.<", str(pages))[-1])[1:-1]
-    # num_of_pages = len(soup.find_all("a", {"class": target_class}))
-    # logging.debug(soup.find_all("a", {"class": target_class}))
-    return int(num_of_pages)
+    try:
+        num_of_pages = str(re.findall(">..<", str(pages))[-1])[1:-1]
+        if not num_of_pages.isdigit():
+            num_of_pages = str(re.findall(">.<", str(pages))[-1])[1:-1]
+        # num_of_pages = len(soup.find_all("a", {"class": target_class}))
+        # logging.debug(soup.find_all("a", {"class": target_class}))
+        return int(num_of_pages)
+    except IndexError:
+        # in this case we have just one page, returning int: 1
+        return 1
 
 
 def remove_dups(list_):
