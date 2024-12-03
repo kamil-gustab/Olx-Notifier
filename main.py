@@ -1,11 +1,9 @@
 import argparse  # Parse arguments
 import certifi  # Certificate issue fix*
-import email_notificator  # File import
 import logging
 import os
 import re  # Regex; extract substrings
 import ssl  # Certificate issue fix*
-import telegram_send  # Telegram message sending library
 import time  # Delay execution
 from bs4 import BeautifulSoup  # BeautifulSoup; parsing HTML
 from urllib.request import urlopen  # Open URLs
@@ -31,7 +29,7 @@ def scrap_page(url):
     logging.debug("Scraping page...")
     soup = BeautifulSoup(page, features="lxml")
 
-    target_class = "css-rc5s2u"
+    target_class = "css-qo0cxu"
 
     for link in soup.find_all("a", {"class": target_class}):
         half_link = link.get("href")
@@ -75,15 +73,14 @@ def remove_dups(list_):
 def get_list_of_ads(url):
     number_of_pages_to_scrap = get_number_of_pages(url)
 
-    page_prefix = "page="
-
+    page_prefix = "&page="
     page_number = 1
     list_of_items = []
 
     while page_number <= number_of_pages_to_scrap:
         logging.info(f"Page number: {page_number}/{number_of_pages_to_scrap}")
-        p_pos = url.find("?search%") + 1
-        full_url = f"{url[:p_pos]}{page_prefix}{page_number}&{url[p_pos:]}"
+        p_pos = url.find("&reason")
+        full_url = f"{url[:p_pos]}{page_prefix}{page_number}{url[p_pos:]}"
         print(full_url)
         list_of_items.extend(scrap_page(full_url))
         page_number += 1  # Go to the next page
@@ -128,17 +125,26 @@ def check_data(data):
 
 
 def notify_mail(data):
+    import email_notificator  # File import
+
     logging.info("Sending notification(s) through Mail!")
     email_notificator.send_mail(data)
 
 
 def notify_telegram(data, config_path=None):
+    import telegram_send  # Telegram message sending library
+
     logging.info("Sending notification(s) through Telegram!")
     if config_path:
         telegram_send.send(messages=data, conf=config_path)
     else:
         telegram_send.send(messages=data)
 
+def notify_ntfy(data, topic):
+    logging.info("Sending notification(s) through Ntfy.sh!")
+
+    req = request.Request(f"https://ntfy.sh/{topic}", data=str(*data).encode("utf-8"))
+    request.urlopen(req)
 
 def format_url(url):
     if url[-1] == "/":
@@ -164,7 +170,7 @@ if __name__ == "__main__":
         help="Choose way of notifying about new ads.",
         type=str,
         required=True,
-        choices=["mail", "no-notify", "telegram"]
+        # choices=["mail", "no-notify", "telegram", "ntfy"]
     )
     parser.add_argument(
         "-u", "--url",
@@ -173,7 +179,8 @@ if __name__ == "__main__":
         required=False
     )
     args = parser.parse_args()
-    log_lvl = logging.INFO
+    # log_lvl = logging.INFO
+    log_lvl = logging.DEBUG
     if args.debug:
         log_lvl = logging.DEBUG
     first_run = False
@@ -218,6 +225,8 @@ if __name__ == "__main__":
                     notify_telegram(new_ads)
             elif args.notify == "mail":
                 notify_mail(new_ads)
+            elif args.notify.startswith("ntfy"):
+                notify_ntfy(new_ads, args.notify[5:])
             else:
                 logging.info(
                     "You've chosen --notify no-notify -not sending any notify."
