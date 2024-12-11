@@ -73,14 +73,20 @@ def remove_dups(list_):
 def get_list_of_ads(url):
     number_of_pages_to_scrap = get_number_of_pages(url)
 
-    page_prefix = "&page="
+    page_prefix = "?page="
     page_number = 1
     list_of_items = []
 
     while page_number <= number_of_pages_to_scrap:
         logging.info(f"Page number: {page_number}/{number_of_pages_to_scrap}")
-        p_pos = url.find("&reason")
-        full_url = f"{url[:p_pos]}{page_prefix}{page_number}{url[p_pos:]}"
+        p_pos = url.find("?search")
+        if p_pos == -1:
+            p_pos = url.find("&search")
+            page_prefix = "&page="
+            full_url = f"{url[:p_pos]}{page_prefix}{page_number}{url[p_pos:]}"
+        else:
+            # in this case we need to replace "?search" with "&search"
+            full_url = f"{url[:p_pos]}{page_prefix}{page_number}&{url[p_pos + 1:]}"
         print(full_url)
         list_of_items.extend(scrap_page(full_url))
         page_number += 1  # Go to the next page
